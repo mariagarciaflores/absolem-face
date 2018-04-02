@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { AngularFirestore, AngularFirestoreCollection } from 'angularfire2/firestore';
 import { OrderService } from '../../services/order.service';
+import { Observable } from 'rxjs/Observable';
 
 declare const $: any;
 @Component({
@@ -12,8 +14,19 @@ export class OrdersComponent implements OnInit {
   orders: Array<any>;
   currentOrderDetail: any = {};
   orderDetailsToEdit: Array<any> = [];
+  private itemsCollection: AngularFirestoreCollection<any>;
+  items: Observable<any[]>;
 
-  constructor(private orderService: OrderService) {
+  constructor(private orderService: OrderService, private afs: AngularFirestore) {
+    this.itemsCollection = afs.collection<any>('batches');
+    this.items = this.itemsCollection.valueChanges();
+    this.items.subscribe(batch => {
+      // console.log(batch);
+    });
+    var filtered = afs.collection('batches', ref => ref.where('state', '==', 'open')).valueChanges();
+    filtered.subscribe(batch => {
+      console.log(batch);
+    });
     this.fillOrders();
   }
 
@@ -31,6 +44,7 @@ export class OrdersComponent implements OnInit {
 
       }
     );
+
   }
 
   getOrderDetail(orderId, orderName, orderNumber): void {
