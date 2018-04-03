@@ -1,4 +1,4 @@
-<section class="content">
+<section id="a" class="content">
   <div class="nav-tabs-custom">
     <ul class="nav nav-tabs">
       <li class="active">
@@ -11,9 +11,9 @@
     <div class="tab-content">
 
       <div class="tab-pane active" id="eat_me_tab">
-        <div class="box-body">
+        <div id="eatMeBody" class="box-body">
           <div class="row">
-            <div class="col-md-4 col-xs-12 col-sm-6" *ngFor="let product of eatMeList" (swipeleft)="swipeLeft(product)" (swiperight)="swipeRight(product)">
+            <div class="col-md-4 col-xs-12 col-sm-6" *ngFor="let product of eatMes | async" (swipeleft)="swipeLeft(product)" (swiperight)="swipeRight(product)">
               <div [attr.id]="'eatMe' + product.id" class="carousel slide" data-ride="carousel" data-interval="0">
                 <div class="carousel-inner" (click)="swipeLeft(product)">
                   <div class="item active">
@@ -41,14 +41,14 @@
           </div>
         </div>
         <div class="box-footer">
-          <button type="button" class="btn btn-info pull-right">Procesar pedido</button>
+          <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#edit-order" (click)="buildOrder()">Procesar pedido</button>
         </div>
       </div>
 
       <div class="tab-pane" id="drink_me_tab">
-        <div class="box-body">
+        <div id="drinkMeBody" class="box-body">
           <div class="row">
-            <div class="col-md-4  col-xs-12" *ngFor="let product of drinkMeList" (swipeleft)="swipeLeft(product)" (swiperight)="swipeRight(product)">
+            <div class="col-md-4  col-xs-12" *ngFor="let product of drinkMes | async" (swipeleft)="swipeLeft(product)" (swiperight)="swipeRight(product)">
               <div [attr.id]="'eatMe' + product.id" class="carousel slide" data-ride="carousel" data-interval="false">
                 <div class="carousel-inner" (click)="swipeLeft(product)">
                   <div class="item active">
@@ -76,10 +76,61 @@
           </div>
         </div>
         <div class="box-footer">
-          <button type="button" class="btn btn-info pull-right">Procesar pedido</button>
+          <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#edit-order" (click)="buildOrder()">Procesar pedido</button>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <div class="modal fade in" id="edit-order">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title">Detalles de la Órden</h4>
+        </div>
+        <div class="modal-body">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="text-center">Cantidad</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let editOrderDetail of orderDetails" [ngClass]="{'disabled-row': editOrderDetail.softDelete === 1, 'disabled-row:hover': editOrderDetail.softDelete === 1}">
+                <td>{{editOrderDetail.product}}</td>
+                <td class="text-center" *ngIf="editOrderDetail.softDelete === 0">
+                  <input name="amount" type="number" class="form-control input-sm edit-input-width text-center" min="0" [value]="editOrderDetail.amount" [(ngModel)]="editOrderDetail.amount">
+                </td>
+                <td class="text-center" *ngIf="editOrderDetail.softDelete === 1">
+                  ----
+                </td>
+                <td *ngIf="editOrderDetail.softDelete === 0">
+                    <a type="button" (click)="deleteOrderDetail(editOrderDetail)"><i class="fa fa-trash-o text-danger icon-big-size"></i></a>
+                </td>
+                <td *ngIf="editOrderDetail.softDelete == 1">
+                    <a type="button" (click)="returnOrderDetail(editOrderDetail)"><i class="fa fa-reply"></i></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <div class="row">
+            <div class="text-left col-sm-6 col-xs-6">
+              <button class="btn btn-warning" type="button" data-toggle="modal" data-target="#order-detail" data-dismiss="modal" (click)="updateOrderDetail()">Guardar</button>
+            </div>
+            <div class="text-right col-sm-6 col-xs-6">
+              <button class="btn btn-default" type="button" data-toggle="modal" data-target="#order-detail" data-dismiss="modal">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

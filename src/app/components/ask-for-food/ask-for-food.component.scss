@@ -1,3 +1,9 @@
+#eatMeBody, #drinkMeBody {
+    height: calc(100vh - 219px);
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
 .img-soft-blur {
     -webkit-filter: blur(2px); /* Safari 6.0 - 9.0 */
     filter: blur(2px);

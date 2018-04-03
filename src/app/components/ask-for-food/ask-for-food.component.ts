@@ -1,6 +1,8 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection } from 'angularfire2/firestore';
 import { Observable } from 'rxjs/Observable';
+import { IProductId } from '../../interfaces/i-product-id';
+import { IProduct } from '../../interfaces/i-product';
 
 declare var $: any;
 declare var Hammer: any;
@@ -20,91 +22,39 @@ export class AskForFoodComponent implements OnInit, AfterViewInit {
 
   pauseCarousel: boolean;
 
-  private itemsCollection: AngularFirestoreCollection<any>;
+  orderDetails: Array<any>;
 
-  items: Observable<any[]>;
+  eatMes: Observable<IProductId[]>;
+
+  drinkMes: Observable<IProductId[]>;
+
+  private eatMeCollection: AngularFirestoreCollection<IProduct>;
+
+  private drinkMeCollection: AngularFirestoreCollection<IProduct>;
 
   constructor(private afs: AngularFirestore) {
-    this.itemsCollection = afs.collection<any>('products');
-    this.items = this.itemsCollection.valueChanges();
-    this.items.subscribe(product => {
-      console.log(product);
+    this.eatMeCollection = afs.collection<any>('products', ref => ref.where('type', '==', 'eatMe'));
+    this.drinkMeCollection = afs.collection<any>('products', ref => ref.where('type', '==', 'drinkMe'));
+
+    this.eatMes = this.eatMeCollection.snapshotChanges().map(actions => {
+      return actions.map(a => {
+        const data = a.payload.doc.data() as IProduct;
+        const id = a.payload.doc.id;
+        return { id, ...data };
+      });
     });
-    this.foodList = [
-      {
-        id: 1,
-        name: 'Hamburguesa',
-        price: 7,
-        imgURL: './assets/img/hamburguer.jpg',
-        type: 'eatMe'
-      },
-      {
-        id: 2,
-        name: 'Hamburguesa',
-        price: 7,
-        imgURL: './assets/img/hamburguer.jpg',
-        type: 'eatMe'
-      },
-      {
-        id: 3,
-        name: 'Hamburguesa',
-        price: 7,
-        imgURL: './assets/img/hamburguer.jpg',
-        type: 'eatMe'
-      },
-      {
-        id: 4,
-        name: 'Hamburguesa',
-        price: 7,
-        imgURL: './assets/img/hamburguer.jpg',
-        type: 'eatMe'
-      },
-      {
-        id: 5,
-        name: 'Hamburguesa',
-        price: 7,
-        imgURL: './assets/img/hamburguer.jpg',
-        type: 'eatMe'
-      },
-      {
-        id: 6,
-        name: 'Café',
-        price: 20,
-        imgURL: './assets/img/coffee3.jpg',
-        type: 'drinkMe'
-      },
-      {
-        id: 7,
-        name: 'Café',
-        price: 20,
-        imgURL: './assets/img/coffee3.jpg',
-        type: 'drinkMe'
-      },
-      {
-        id: 8,
-        name: 'Café',
-        price: 20,
-        imgURL: './assets/img/coffee3.jpg',
-        type: 'drinkMe'
-      },
-      {
-        id: 9,
-        name: 'Café',
-        price: 20,
-        imgURL: './assets/img/coffee3.jpg',
-        type: 'drinkMe'
-      },
-    ];
-
-    this.eatMeList = this.foodList.filter(
-      food => food.type === 'eatMe'
-    );
-
-    this.drinkMeList = this.foodList.filter(
-      food => food.type === 'drinkMe'
-    );
+    
+    this.drinkMes = this.drinkMeCollection.snapshotChanges().map(actions => {
+      return actions.map(a => {
+        const data = a.payload.doc.data() as IProduct;
+        const id = a.payload.doc.id;
+        return { id, ...data };
+      });
+    });
 
     this.pauseCarousel = false;
+
+    this.orderDetails = new Array();
   }
 
   ngOnInit() {
@@ -132,6 +82,32 @@ export class AskForFoodComponent implements OnInit, AfterViewInit {
     }
   }
 
+  buildOrder() {
+    this.orderDetails = new Array();
+
+    let orders = this.foodList.filter(
+      food => food.quantity > 0
+    );
+
+    orders.forEach((current) => {
+      this.orderDetails.push({
+        product: current.name,
+        amount: current.quantity,
+        unitPrice: current.price,
+        totalPrice: current.price * current.quantity,
+        softDelete: 0
+      });
+    });
+  }
+
+  deleteOrderDetail(currentData): void {
+    currentData.softDelete = 1;
+  }
+
+  returnOrderDetail(currentData): void {
+    currentData.softDelete = 0;
+  }
+
   private addToCart(product) {
     if (!product.quantity) {
       product.quantity = 0;
@@ -145,6 +121,7 @@ export class AskForFoodComponent implements OnInit, AfterViewInit {
     }
     if (product.quantity === 0) {
       this.prev(product);
+      product.quantity = null;
     }
   }
 
